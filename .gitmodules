@@ -1,3 +1,9 @@
 [submodule "libopencm3"]
 	path = libopencm3
 	url = https://github.com/libopencm3/libopencm3.git
+[submodule "pms5003"]
+	path = pms5003
+	url = https://github.com/fornellas/pms5003.git
+[submodule "mh-z19c"]
+	path = mh-z19c
+	url = https://github.com/fornellas/mh-z19c.git
