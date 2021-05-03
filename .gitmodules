@@ -7,3 +7,6 @@
 [submodule "mh-z19c"]
 	path = mh-z19c
 	url = https://github.com/fornellas/mh-z19c.git
+[submodule "eglib"]
+	path = eglib
+	url = https://github.com/fornellas/eglib.git
