@@ -4,7 +4,7 @@ env:
   APT_DEPS_AUTOTOOLS: gnulib autoconf autoconf-archive automake
   APT_DEPS_LIBOPENCM3: gcc-arm-none-eabi libnewlib-dev libnewlib-arm-none-eabi
 jobs:
-  dist:
+  build:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -14,55 +14,17 @@ jobs:
           git submodule update
       - name: Install APT dependencies
         run: sudo apt-get update && sudo apt-get -y install ${{env.APT_DEPS_AUTOTOOLS}} ${{env.APT_DEPS_LIBOPENCM3}}
-      - name: Build libopencm3
-        run: make -C libopencm3/
       - name: autogen.sh
         run: ./autogen.sh
       - name: configure
         run: |
           mkdir _build/
           cd _build/
-          ../configure --host=arm-none-eabi --with-libopencm3=../libopencm3/
-      - name: make dist
-        run: |
-          make -C _build/ dist V=1
-          mv _build/environmental-sensors-$(cat .version).tar.gz .
-      - name: Upload dist
-        uses: actions/upload-artifact@v2
-        with:
-          name: _dist
-          path: |
-            environmental-sensors-*.tar.gz
-            .version
-  build_libopencm3_stm32f4:
-    runs-on: ubuntu-20.04
-    needs: dist
-    steps:
-      - uses: actions/checkout@v2
-      - name: git submodules
-        run: |
-          git submodule init
-          git submodule update
-      - name: Install APT dependencies
-        run: sudo apt-get update && sudo apt-get -y install ${{env.APT_DEPS_LIBOPENCM3}}
-      - name: Setup Python
-        uses: actions/setup-python@v2
-      - name: Build libopencm3
-        run: make -C libopencm3/
-      - name: Download dist
-        uses: actions/download-artifact@v2
-      - name: Unpack
-        run: |
-          cd _dist/
-          tar zxf environmental-sensors-$(cat .version).tar.gz
-      - name: configure
-        run: |
-          mkdir _build/
-          cd _build
-          ../_dist/environmental-sensors-$(cat ../_dist/.version)/configure --host=arm-none-eabi --with-libopencm3=../libopencm3/
+          ../configure --host=arm-none-eabi
       - name: make
-        run: make -C _build/ V=1
+        run: |
+          make -C _build/ V=1
       - name: Cleanup
-        run: rm -rf _dist/ _build/
+        run: rm -rf _build/
       - name: git status
         run: GIT_STATUS="$(git status --porcelain)" && [ -n "$GIT_STATUS" ] && { echo git status ; echo "$GIT_STATUS" ; echo git diff ; git diff ; exit 1 ; } || true
