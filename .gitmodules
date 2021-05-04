@@ -10,3 +10,6 @@
 [submodule "eglib"]
 	path = eglib
 	url = https://github.com/fornellas/eglib.git
+[submodule "libopencm3-fpo"]
+	path = libopencm3-fpo
+	url = https://github.com/fornellas/libopencm3-fpo.git
