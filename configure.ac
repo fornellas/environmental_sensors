@@ -3,11 +3,11 @@
 
 AC_PREREQ([2.69])
 AC_INIT(
-	[libopencm3-fpo-template],
+	[environmental_sensors],
 	[0.0.0],
-	[https://github.com/fornellas/libopencm3-fpo-template/issues],
-	[libopencm3-fpo-template],
-	[https://github.com/fornellas/libopencm3-fpo-template/])
+	[https://github.com/fornellas/environmental_sensors/issues],
+	[environmental_sensors],
+	[https://github.com/fornellas/environmental_sensors/])
 AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -53,7 +53,7 @@ AC_MSG_RESULT([ok])
 ## eglib
 ##
 
-AX_SUBDIRS_CONFIGURE([eglib], [], [], [--with-libopencm3="$OPENCM3_DIR"], [])
+AX_SUBDIRS_CONFIGURE([eglib], [], [], [[--enable-libopencm3_stm32f4], [--with-libopencm3="$OPENCM3_DIR"]], [])
 
 ##
 ## Misc

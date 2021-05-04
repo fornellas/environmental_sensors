@@ -26,13 +26,13 @@ jobs:
       - name: make dist
         run: |
           make -C _build/ dist V=1
-          mv _build/libopencm3-fpo-template-$(cat .version).tar.gz .
+          mv _build/environmental-sensors-$(cat .version).tar.gz .
       - name: Upload dist
         uses: actions/upload-artifact@v2
         with:
           name: _dist
           path: |
-            libopencm3-fpo-template-*.tar.gz
+            environmental-sensors-*.tar.gz
             .version
   build_libopencm3_stm32f4:
     runs-on: ubuntu-20.04
@@ -54,12 +54,12 @@ jobs:
       - name: Unpack
         run: |
           cd _dist/
-          tar zxf libopencm3-fpo-template-$(cat .version).tar.gz
+          tar zxf environmental-sensors-$(cat .version).tar.gz
       - name: configure
         run: |
           mkdir _build/
           cd _build
-          ../_dist/libopencm3-fpo-template-$(cat ../_dist/.version)/configure --host=arm-none-eabi --with-libopencm3=../libopencm3/
+          ../_dist/environmental-sensors-$(cat ../_dist/.version)/configure --host=arm-none-eabi --with-libopencm3=../libopencm3/
       - name: make
         run: make -C _build/ V=1
       - name: Cleanup
