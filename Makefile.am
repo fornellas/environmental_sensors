@@ -7,7 +7,19 @@ OOCD_TARGET= stm32f4x
 
 BUILT_SOURCES =
 
-all: main.bin
+SUBDIRS = eglib .
+
+.PHONY: libopencm3
+libopencm3:
+	$(MAKE) -C $(srcdir)/libopencm3/
+
+.PHONY: libopencm3
+clean-libopencm3:
+	$(MAKE) -C $(srcdir)/libopencm3/ clean
+
+clean-local: clean-libopencm3
+
+all-recursive: libopencm3
 
 ##
 ## configure.ac dep
@@ -76,7 +88,7 @@ main_elf_LDFLAGS = $(LDFLAGS_EGLIB) $(LDFLAGS_COMMON)
 main_elf_LDADD = $(LIBS_EGLIB) $(LIBS_OPENCM3)
 main_elf_CPPFLAGS = $(CPPFLAGS_EGLIB)
 main_elf_SOURCES = main.c
-EXTRA_main_elf_DEPENDENCIES = $(LDSCRIPT)
+EXTRA_main_elf_DEPENDENCIES = $(LDSCRIPT) libopencm3
 CLEANFILES += main.bin
 
 ##
