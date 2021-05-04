@@ -6,8 +6,24 @@ OOCD_INTERFACE = stlink-v2
 OOCD_TARGET= stm32f4x
 
 BUILT_SOURCES =
-
 SUBDIRS = eglib .
+
+##
+## configure.ac dep
+##
+
+EXTRA_DIST = build-aux/libopencm3.mk
+
+##
+## opencm3 variables & rules
+##
+
+include $(OPENCM3_DIR)/mk/genlink-config.mk
+# automake hides replaced variables, so we must redefine it here
+LDSCRIPT = generated.$(DEVICE).ld
+Q = $(AM_V_GEN)
+include $(OPENCM3_DIR)/mk/genlink-rules.mk
+CLEANFILES = $(LDSCRIPT)
 
 .PHONY: libopencm3
 libopencm3:
@@ -20,33 +36,6 @@ clean-libopencm3:
 clean-local: clean-libopencm3
 
 all-recursive: libopencm3
-
-##
-## configure.ac dep
-##
-
-EXTRA_DIST = build-aux/libopencm3.mk
-
-##
-## distcheck
-##
-
-DISTCHECK_CONFIGURE_FLAGS =
-DISTCHECK_CONFIGURE_FLAGS += --host=arm-none-eabi
-DISTCHECK_CONFIGURE_FLAGS += --with-libopencm3=$(OPENCM3_DIR)
-DISTCHECK_CONFIGURE_FLAGS += --with-eglib-libdir=$(EGLIB_LIBDIR)
-DISTCHECK_CONFIGURE_FLAGS += --with-eglib-includedir=$(EGLIB_INCLUDEDIR)
-
-##
-## opencm3 variables & rules
-##
-
-include $(OPENCM3_DIR)/mk/genlink-config.mk
-# automake hides replaced variables, so we must redefine it here
-LDSCRIPT = generated.$(DEVICE).ld
-Q = $(AM_V_GEN)
-include $(OPENCM3_DIR)/mk/genlink-rules.mk
-CLEANFILES = $(LDSCRIPT)
 
 ##
 ## .bin rules
@@ -66,29 +55,39 @@ SUFFIXES = .elf.bin .bin
 ##
 
 CFLAGS_COMMON =
-CFLAGS_COMMON += $(CFLAGS_OPENCM3)
 CFLAGS_COMMON += -fno-common
 CFLAGS_COMMON += -ffunction-sections -fdata-sections
+CFLAGS_COMMON += $(CFLAGS_WARNINGS)
+CFLAGS_COMMON += $(CFLAGS_EGLIB)
+CFLAGS_COMMON += $(CFLAGS_OPENCM3)
 
 LDFLAGS_COMMON =
 LDFLAGS_COMMON += -T$(LDSCRIPT)
-LDFLAGS_COMMON += $(LDFLAGS_OPENCM3)
 LDFLAGS_COMMON += -nostartfiles
-LDFLAGS_COMMON += $(CFLAGS_OPENCM3)
 LDFLAGS_COMMON += -specs=nano.specs
 LDFLAGS_COMMON += -Wl,--gc-sections
+LDFLAGS_COMMON += $(LDFLAGS_EGLIB)
+LDFLAGS_COMMON += $(LDFLAGS_OPENCM3)
+
+LDADD_COMMON =
+LDADD_COMMON += $(LIBS_EGLIB)
+LDADD_COMMON += $(LIBS_OPENCM3)
+
+CPPFLAGS_COMMON =
+CPPFLAGS_COMMON += $(CPPFLAGS_EGLIB)
+CPPFLAGS_COMMON += $(CFLAGS_OPENCM3)
 
 ##
 ## PROGRAMS
 ##
 
 noinst_PROGRAMS = main.elf
-main_elf_CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_WARNINGS)
-main_elf_LDFLAGS = $(LDFLAGS_EGLIB) $(LDFLAGS_COMMON)
-main_elf_LDADD = $(LIBS_EGLIB) $(LIBS_OPENCM3)
-main_elf_CPPFLAGS = $(CPPFLAGS_EGLIB)
+main_elf_CFLAGS = $(CFLAGS_COMMON)
+main_elf_LDFLAGS = $(LDFLAGS_COMMON)
+main_elf_LDADD = $(LDADD_COMMON)
+main_elf_CPPFLAGS = $(CPPFLAGS_COMMON)
 main_elf_SOURCES = main.c
-EXTRA_main_elf_DEPENDENCIES = $(LDSCRIPT) libopencm3
+EXTRA_main_elf_DEPENDENCIES = $(LDSCRIPT)
 CLEANFILES += main.bin
 
 ##
