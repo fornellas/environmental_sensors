@@ -60,6 +60,9 @@ CFLAGS_COMMON += -ffunction-sections -fdata-sections
 CFLAGS_COMMON += $(CFLAGS_WARNINGS)
 CFLAGS_COMMON += $(CFLAGS_EGLIB)
 CFLAGS_COMMON += $(CFLAGS_OPENCM3)
+CFLAGS_COMMON += -I$(srcdir)/libopencm3-fpo/stm32/f4/
+CFLAGS_COMMON += -I$(srcdir)/pms5003/
+CFLAGS_COMMON += -I$(srcdir)/mh-z19c/
 
 LDFLAGS_COMMON =
 LDFLAGS_COMMON += -T$(LDSCRIPT)
@@ -87,6 +90,9 @@ main_elf_LDFLAGS = $(LDFLAGS_COMMON)
 main_elf_LDADD = $(LDADD_COMMON)
 main_elf_CPPFLAGS = $(CPPFLAGS_COMMON)
 main_elf_SOURCES = main.c
+main_elf_SOURCES += libopencm3-fpo/stm32/f4/usart.c
+main_elf_SOURCES += pms5003/pms5003.c
+main_elf_SOURCES += mh-z19c/mh-z19c.c
 EXTRA_main_elf_DEPENDENCIES = $(LDSCRIPT)
 CLEANFILES += main.bin
 
