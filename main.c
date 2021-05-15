@@ -1,16 +1,18 @@
 #define _GNU_SOURCE
+
 #include "display.h"
 #include "mh-z19c.h"
 #include "pms5003.h"
 #include "usart.h"
+#include "WeActTC/MiniSTM32F4x1/key.h"
+#include <eglib/display.h>
+#include <eglib/display/frame_buffer.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/usart.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <eglib/display.h>
-#include <eglib/display/frame_buffer.h>
 
 //
 // PMS5003
@@ -203,6 +205,8 @@ void setup_mh_z19c(void) {
 int main(void) {
 	rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]);
 
+	key_setup();
+
 	display_setup();
 
 	setup_pms5003();
@@ -216,6 +220,14 @@ int main(void) {
 		enum pms5003_error pm5003_ret;
 		uint16_t co2_concentration;
 		enum mh_z19c_error mh_z19c_ret;
+
+		if(key_get()) {
+			display_message("CO₂ Zero Point");
+			gpio_clear(MH_Z19C_PORT_HD, MH_Z19C_GPIO_HD);
+			delay(8);
+			gpio_set(MH_Z19C_PORT_HD, MH_Z19C_GPIO_HD);
+			display_message("Ready!");
+		}
 
 		if((pm5003_ret = pms5003_get_passive_measurement(&measurement, write_serial_pms5003, read_serial_pms5003))) {
 			display_error("PMS5003", pms5003_strerror(pm5003_ret));

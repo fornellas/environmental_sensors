@@ -64,6 +64,10 @@ void display_setup() {
 		&font_FreeFont_FreeSans_22px,
 		&unicode_block_FreeFont_FreeSans_22px_SuperscriptsAndSubscripts
 	);
+	eglib_AddUnicodeBlockToFont(
+		&font_FreeFont_FreeSans_28px,
+		&unicode_block_FreeFont_FreeSans_22px_SuperscriptsAndSubscripts
+	);
 
 	display_message("ST7789");
 }
@@ -72,7 +76,7 @@ void display_message(const char *msg) {
 	eglib_SetIndexColor(&eglib, 0, 255, 255, 255);
 	eglib_ClearScreen(&eglib);
 	eglib_SetIndexColor(&eglib, 0, 0, 0, 0);
-	eglib_SetFont(&eglib, &font_FreeFont_FreeSans_36px);
+	eglib_SetFont(&eglib, &font_FreeFont_FreeSans_28px);
 	eglib_DrawTextCentered(&eglib, eglib_GetWidth(&eglib)/2, eglib_GetHeight(&eglib)/2, msg);
 	eglib_FrameBuffer_Send(&eglib);
 }
@@ -81,7 +85,7 @@ void display_error(const char *title, const char *msg) {
 	eglib_SetIndexColor(&eglib, 0, 255, 0, 0);
 	eglib_ClearScreen(&eglib);
 	eglib_SetIndexColor(&eglib, 0, 0, 0, 0);
-	eglib_SetFont(&eglib, &font_FreeFont_FreeSans_36px);
+	eglib_SetFont(&eglib, &font_FreeFont_FreeSans_28px);
 	eglib_DrawTextCentered(&eglib, eglib_GetWidth(&eglib)/2, eglib_GetHeight(&eglib)/2 - 16, title);
 
 	eglib_SetFont(&eglib, &font_FreeFont_FreeSans_16px);
