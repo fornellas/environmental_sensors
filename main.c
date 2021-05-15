@@ -1,18 +1,16 @@
 #define _GNU_SOURCE
-#include <eglib.h>
-#include <eglib/display/frame_buffer.h>
-#include <eglib/display/st7789.h>
-#include <eglib/hal/four_wire_spi/libopencm3_stm32f4.h>
+#include "display.h"
+#include "mh-z19c.h"
+#include "pms5003.h"
+#include "usart.h"
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/spi.h>
-#include <stdio.h>
-#include "usart.h"
-#include "pms5003.h"
-#include "mh-z19c.h"
 #include <libopencm3/stm32/usart.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <eglib/display.h>
+#include <eglib/display/frame_buffer.h>
 
 //
 // PMS5003
@@ -92,134 +90,11 @@ int write_serial_mh_z19c(uint8_t c) {
 }
 
 //
-// Display
-//
-
-void display_message(eglib_t *eglib, const char *msg);
-
-void display_message(eglib_t *eglib, const char *msg) {
-	eglib_SetIndexColor(eglib, 0, 255, 255, 255);
-	eglib_ClearScreen(eglib);
-	eglib_SetIndexColor(eglib, 0, 0, 0, 0);
-	eglib_SetFont(eglib, &font_FreeFont_FreeSans_36px);
-	eglib_DrawTextCentered(eglib, eglib_GetWidth(eglib)/2, eglib_GetHeight(eglib)/2, msg);
-	eglib_FrameBuffer_Send(eglib);
-}
-
-void display_error(eglib_t *eglib, const char *title, const char *msg);
-
-void display_error(eglib_t *eglib, const char *title, const char *msg) {
-	eglib_SetIndexColor(eglib, 0, 255, 0, 0);
-	eglib_ClearScreen(eglib);
-	eglib_SetIndexColor(eglib, 0, 0, 0, 0);
-	eglib_SetFont(eglib, &font_FreeFont_FreeSans_36px);
-	eglib_DrawTextCentered(eglib, eglib_GetWidth(eglib)/2, eglib_GetHeight(eglib)/2 - 16, title);
-
-	eglib_SetFont(eglib, &font_FreeFont_FreeSans_16px);
-	eglib_DrawTextCentered(eglib, eglib_GetWidth(eglib)/2, eglib_GetHeight(eglib)/2, msg);
-	eglib_FrameBuffer_Send(eglib);
-}
-
-void draw_measurement(
-	eglib_t *eglib,
-	coordinate_t x, coordinate_t y,
-	coordinate_t width, coordinate_t height,
-	color_t *background,
-	const char *title, uint16_t value, const char *unit
-);
-
-void draw_measurement(
-	eglib_t *eglib,
-	coordinate_t x, coordinate_t y,
-	coordinate_t width, coordinate_t height,
-	color_t *background,
-	const char *title, uint16_t value, const char *unit
-) {
-	char *buff;
-	coordinate_t text_width;
-	coordinate_t x_offset;
-	coordinate_t y_offset;
-
-	eglib_SetIndexColor(eglib, 0, background->r, background->g, background->b);
-	eglib_DrawBox(eglib, x, y, width, height);
-
-	if(asprintf(&buff, "%d", value) == -1) {
-		display_error(eglib, "draw_measurement()", "Low memory!");
-		while(true);
-	}
-
-	text_width = 0;
-	eglib_SetFont(eglib, &font_FreeFont_FreeSans_22px);
-	text_width += eglib_GetTextWidth(eglib, title);
-	eglib_SetFont(eglib, &font_FreeFont_FreeSans_48px);
-	text_width += eglib_GetTextWidth(eglib, buff);
-	eglib_SetFont(eglib, &font_FreeFont_FreeSans_22px);
-	text_width += eglib_GetTextWidth(eglib, unit);
-	x_offset = x + (width - text_width) / 2;
-
-	eglib_SetIndexColor(eglib, 0, 0, 0, 0);
-
-	y_offset = y + height / 2 + font_FreeFont_FreeSans_54px.ascent / 2;
-
-	eglib_SetFont(eglib, &font_FreeFont_FreeSans_22px);
-	eglib_DrawText(eglib, x_offset, y_offset, title);
-	x_offset += eglib_GetTextWidth(eglib, title);
-
-	eglib_SetFont(eglib, &font_FreeFont_FreeSans_48px);
-	eglib_DrawText(eglib, x_offset, y_offset, buff);
-	x_offset += eglib_GetTextWidth(eglib, buff);
-
-	eglib_SetFont(eglib, &font_FreeFont_FreeSans_22px);
-	eglib_DrawText(eglib, x_offset, y_offset, unit);
-
-	free(buff);
-}
-
-//
 // Main
 //
 
 int main(void) {
-	eglib_t eglib;
-	eglib_t *eglib_real;
-	(void)eglib_real;
 
-	four_wire_spi_libopencm3_stm32f4_config_t  four_wire_spi_libopencm3_stm32f4_config = {
-		// rst
-		.rcc_rst = RCC_GPIOA,
-		.port_rst = GPIOA,
-		.gpio_rst = GPIO4,
-		// cd
-		.rcc_dc = RCC_GPIOA,
-		.port_dc = GPIOA,
-		.gpio_dc = GPIO0,
-		// cs
-		.rcc_cs = RCC_GPIOA,
-		.port_cs = GPIOA,
-		.gpio_cs = GPIO1,
-		// spi
-		.rcc_spi = RCC_SPI1,
-		.spi = SPI1,
-		// sck
-		.rcc_sck = RCC_GPIOA,
-		.port_sck = GPIOA,
-		.gpio_sck = GPIO5,
-		// mosi
-		.rcc_mosi = RCC_GPIOA,
-		.port_mosi = GPIOA,
-		.gpio_mosi = GPIO7,
-	};
-
-	st7789_config_t st7789_config = {
-		.width = 240,
-		.height = 240,
-		.color = ST7789_COLOR_16_BIT,
-		.page_address = ST7789_PAGE_ADDRESS_TOP_TO_BOTTOM,
-		.colum_address = ST7789_COLUMN_ADDRESS_LEFT_TO_RIGHT,
-		.page_column_order = ST7789_PAGE_COLUMN_ORDER_NORMAL,
-		.vertical_refresh = ST7789_VERTICAL_REFRESH_TOP_TO_BOTTOM,
-		.horizontal_refresh = ST7789_HORIZONTAL_REFRESH_LEFT_TO_RIGHT,
-	};
 	enum mh_z19c_error mh_z19c_ret;
 	enum pms5003_error pm5003_ret;
 
@@ -233,29 +108,13 @@ int main(void) {
 	// eglib
 	//
 
-	frame_buffer_config_t frame_buffer_config;
-	eglib_real = eglib_Init_FrameBuffer(
-		&eglib, &frame_buffer_config,
-		&four_wire_spi_libopencm3_stm32f4, &four_wire_spi_libopencm3_stm32f4_config,
-		&st7789, &st7789_config
-	);
-	display_message(&eglib, "");
-
-	eglib_AddUnicodeBlockToFont(
-		&font_FreeFont_FreeSans_22px,
-		&unicode_block_FreeFont_FreeSans_22px_Latin1Supplement
-	);
-
-	eglib_AddUnicodeBlockToFont(
-		&font_FreeFont_FreeSans_22px,
-		&unicode_block_FreeFont_FreeSans_22px_SuperscriptsAndSubscripts
-	);
+	display_setup();
 
 	//
 	// PMS5003
 	//
 
-	display_message(&eglib, "PMS5003");
+	display_message("PMS5003");
 
 	// SET
 	rcc_periph_clock_enable(PMS5003_RCC_SET);
@@ -296,16 +155,16 @@ int main(void) {
 		PMS5003_USART_FLOW_CONTROL
 	);
 	// Required as uC TX takes ~110us to go from low to high
-	eglib_DelayUs(eglib_real, 150);
+	delay_us(150);
 
 	// RESET
 	gpio_set(PMS5003_PORT_RESET, PMS5003_GPIO_RESET);
 	// Required as PMS5003 takes a while to start accepting requests after reset
-	eglib_DelayMs(eglib_real, 1500);
+	delay_ms(1500);
 
 	// Passive mode
 	if((pm5003_ret = pms5003_set_data_mode(PMS5003_DATA_MODE_PASSIVE, write_serial_pms5003, read_serial_pms5003))) {
-		display_error(&eglib, "PMS5003", pms5003_strerror(pm5003_ret));
+		display_error("PMS5003", pms5003_strerror(pm5003_ret));
 		while(true);
 	}
 
@@ -313,10 +172,10 @@ int main(void) {
 	// MH-Z19C
 	//
 
-	display_message(&eglib, "MH-Z19C");
+	display_message("MH-Z19C");
 
 	// Required as MH-Z19C takes a while to boot
-	eglib_DelayS(eglib_real, 180);
+	delay(180);
 
 	// USART
 	usart_setup(
@@ -349,9 +208,9 @@ int main(void) {
 
 	// Zero Point Calibration
 	while((mh_z19c_ret = mh_z19c_self_calibration_for_zero_point(false, write_serial_mh_z19c, read_serial_mh_z19c)))
-		display_error(&eglib, "MH-Z19C", mh_z19c_strerror(mh_z19c_ret));
+		display_error("MH-Z19C", mh_z19c_strerror(mh_z19c_ret));
 
-	display_message(&eglib, "Ready!");
+	display_message("Ready!");
 
 	while(true) {
 		struct pms5003_measurement measurement;
@@ -359,7 +218,7 @@ int main(void) {
 
 		// if((pm5003_ret = pms5003_get_active_measurement(&measurement, read_serial_pms5003))) {
 		if((pm5003_ret = pms5003_get_passive_measurement(&measurement, write_serial_pms5003, read_serial_pms5003))) {
-			display_error(&eglib, "PMS5003", pms5003_strerror(pm5003_ret));
+			display_error("PMS5003", pms5003_strerror(pm5003_ret));
 			continue;
 		}
 
@@ -369,7 +228,7 @@ int main(void) {
 			read_serial_mh_z19c
 		);
 		if(mh_z19c_ret) {
-			display_error(&eglib, "MH-Z19C", mh_z19c_strerror(mh_z19c_ret));
+			display_error("MH-Z19C", mh_z19c_strerror(mh_z19c_ret));
 			continue;
 		}
 
@@ -400,7 +259,6 @@ int main(void) {
 		else
 			background = (color_t){180, 63, 151};
 		draw_measurement(
-			&eglib,
 			0, 0,
 			eglib_GetWidth(&eglib), eglib_GetHeight(&eglib)  / 3,
 			&background,
@@ -430,13 +288,11 @@ int main(void) {
 		else
 			background = (color_t){180, 63, 151};
 		draw_measurement(
-			&eglib,
 			0, eglib_GetHeight(&eglib)  / 3,
 			eglib_GetWidth(&eglib), eglib_GetHeight(&eglib)  / 3,
 			&background,
 			"PM₁₀", value, "µg/m³"
 		);
-
 
 		// 250-400ppm: Normal background concentration in outdoor ambient air
 		if(co2_concentration < 600)
@@ -464,7 +320,6 @@ int main(void) {
 		else
 			background = (color_t){180, 63, 151};
 		draw_measurement(
-			&eglib,
 			0, eglib_GetHeight(&eglib) / 3 * 2,
 			eglib_GetWidth(&eglib), eglib_GetHeight(&eglib) / 3,
 			&background,

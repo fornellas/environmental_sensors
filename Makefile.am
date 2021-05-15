@@ -84,6 +84,7 @@ CPPFLAGS_COMMON += $(CFLAGS_OPENCM3)
 ## PROGRAMS
 ##
 
+nobase_include_HEADERS = display.h
 noinst_PROGRAMS = main.elf
 main_elf_CFLAGS = $(CFLAGS_COMMON)
 main_elf_LDFLAGS = $(LDFLAGS_COMMON)
@@ -93,6 +94,7 @@ main_elf_SOURCES = main.c
 main_elf_SOURCES += libopencm3-fpo/stm32/f4/usart.c
 main_elf_SOURCES += pms5003/pms5003.c
 main_elf_SOURCES += mh-z19c/mh-z19c.c
+main_elf_SOURCES += display.c
 EXTRA_main_elf_DEPENDENCIES = $(LDSCRIPT)
 CLEANFILES += main.bin
 
