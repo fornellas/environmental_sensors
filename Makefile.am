@@ -29,7 +29,7 @@ CLEANFILES = $(LDSCRIPT)
 libopencm3:
 	$(MAKE) -C $(srcdir)/libopencm3/
 
-.PHONY: libopencm3
+.PHONY: clean-libopencm3
 clean-libopencm3:
 	$(MAKE) -C $(srcdir)/libopencm3/ clean
 
