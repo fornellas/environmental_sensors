@@ -15,17 +15,17 @@ static eglib_t *eglib_st7789;
 void display_setup() {
 	static four_wire_spi_libopencm3_stm32f4_config_t  four_wire_spi_libopencm3_stm32f4_config = {
 		// rst
-		.rcc_rst = RCC_GPIOA,
-		.port_rst = GPIOA,
-		.gpio_rst = GPIO4,
+		.rcc_rst = RCC_GPIOB,
+		.port_rst = GPIOB,
+		.gpio_rst = GPIO1,
 		// cd
-		.rcc_dc = RCC_GPIOA,
-		.port_dc = GPIOA,
+		.rcc_dc = RCC_GPIOB,
+		.port_dc = GPIOB,
 		.gpio_dc = GPIO0,
 		// cs
 		.rcc_cs = RCC_GPIOA,
 		.port_cs = GPIOA,
-		.gpio_cs = GPIO1,
+		.gpio_cs = GPIO6,
 		// spi
 		.rcc_spi = RCC_SPI1,
 		.spi = SPI1,
