@@ -160,8 +160,7 @@ void setup_mh_z19c(void) {
 	display_message("MH-Z19C");
 
 	// Required as MH-Z19C takes a while to boot
-	// FIXME
-	// delay(180);
+	delay(180);
 
 	// USART
 	usart_setup(
