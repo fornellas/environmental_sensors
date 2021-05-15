@@ -52,67 +52,10 @@ int write_serial_pms5003(uint8_t c) {
 	return 0;
 }
 
-//
-// MH-Z19C
-//
+void setup_pms5003(void);
 
-#define MH_Z19C_USART_RCC_USART_PORT RCC_GPIOA
-#define MH_Z19C_USART_RCC_USART RCC_USART2
-#define MH_Z19C_USART_RCC_USART_TX RCC_GPIOA
-#define MH_Z19C_USART_PORT_USART_TX GPIOA
-#define MH_Z19C_USART_GPIO_USART_TX GPIO2
-#define MH_Z19C_USART_RCC_USART_RX RCC_GPIOA
-#define MH_Z19C_USART_PORT_USART_RX GPIOA
-#define MH_Z19C_USART_GPIO_USART_RX GPIO3
-#define MH_Z19C_USART USART2
-#define MH_Z19C_USART_BAUDRATE 9600
-#define MH_Z19C_USART_DATABITS 8
-#define MH_Z19C_USART_STOPBITS USART_STOPBITS_1
-#define MH_Z19C_USART_MODE USART_MODE_TX_RX
-#define MH_Z19C_USART_PARITY USART_PARITY_NONE
-#define MH_Z19C_USART_FLOW_CONTROL USART_FLOWCONTROL_NONE
-#define MH_Z19C_RCC_HD RCC_GPIOB
-#define MH_Z19C_PORT_HD GPIOB
-#define MH_Z19C_GPIO_HD GPIO2
-
-int read_serial_mh_z19c(uint8_t *c);
-
-int read_serial_mh_z19c(uint8_t *c) {
-	*c = usart_recv_blocking(MH_Z19C_USART);
-	return 0;
-}
-
-int write_serial_mh_z19c(uint8_t c);
-
-int write_serial_mh_z19c(uint8_t c) {
-	usart_send_blocking(MH_Z19C_USART, c);
-	return 0;
-}
-
-//
-// Main
-//
-
-int main(void) {
-
-	enum mh_z19c_error mh_z19c_ret;
+void setup_pms5003(void) {
 	enum pms5003_error pm5003_ret;
-
-	//
-	// Clock
-	//
-
-	rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]);
-
-	//
-	// eglib
-	//
-
-	display_setup();
-
-	//
-	// PMS5003
-	//
 
 	display_message("PMS5003");
 
@@ -167,15 +110,55 @@ int main(void) {
 		display_error("PMS5003", pms5003_strerror(pm5003_ret));
 		while(true);
 	}
+}
 
-	//
-	// MH-Z19C
-	//
+//
+// MH-Z19C
+//
+
+#define MH_Z19C_USART_RCC_USART_PORT RCC_GPIOA
+#define MH_Z19C_USART_RCC_USART RCC_USART2
+#define MH_Z19C_USART_RCC_USART_TX RCC_GPIOA
+#define MH_Z19C_USART_PORT_USART_TX GPIOA
+#define MH_Z19C_USART_GPIO_USART_TX GPIO2
+#define MH_Z19C_USART_RCC_USART_RX RCC_GPIOA
+#define MH_Z19C_USART_PORT_USART_RX GPIOA
+#define MH_Z19C_USART_GPIO_USART_RX GPIO3
+#define MH_Z19C_USART USART2
+#define MH_Z19C_USART_BAUDRATE 9600
+#define MH_Z19C_USART_DATABITS 8
+#define MH_Z19C_USART_STOPBITS USART_STOPBITS_1
+#define MH_Z19C_USART_MODE USART_MODE_TX_RX
+#define MH_Z19C_USART_PARITY USART_PARITY_NONE
+#define MH_Z19C_USART_FLOW_CONTROL USART_FLOWCONTROL_NONE
+#define MH_Z19C_RCC_HD RCC_GPIOB
+#define MH_Z19C_PORT_HD GPIOB
+#define MH_Z19C_GPIO_HD GPIO2
+
+int read_serial_mh_z19c(uint8_t *c);
+
+int read_serial_mh_z19c(uint8_t *c) {
+	*c = usart_recv_blocking(MH_Z19C_USART);
+	return 0;
+}
+
+int write_serial_mh_z19c(uint8_t c);
+
+int write_serial_mh_z19c(uint8_t c) {
+	usart_send_blocking(MH_Z19C_USART, c);
+	return 0;
+}
+
+void setup_mh_z19c(void);
+
+void setup_mh_z19c(void) {
+	enum mh_z19c_error mh_z19c_ret;
 
 	display_message("MH-Z19C");
 
 	// Required as MH-Z19C takes a while to boot
-	delay(180);
+	// FIXME
+	// delay(180);
 
 	// USART
 	usart_setup(
@@ -209,14 +192,29 @@ int main(void) {
 	// Zero Point Calibration
 	while((mh_z19c_ret = mh_z19c_self_calibration_for_zero_point(false, write_serial_mh_z19c, read_serial_mh_z19c)))
 		display_error("MH-Z19C", mh_z19c_strerror(mh_z19c_ret));
+}
+
+//
+// Main
+//
+
+int main(void) {
+	rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]);
+
+	display_setup();
+
+	setup_pms5003();
+
+	setup_mh_z19c();
 
 	display_message("Ready!");
 
 	while(true) {
 		struct pms5003_measurement measurement;
+		enum pms5003_error pm5003_ret;
 		uint16_t co2_concentration;
+		enum mh_z19c_error mh_z19c_ret;
 
-		// if((pm5003_ret = pms5003_get_active_measurement(&measurement, read_serial_pms5003))) {
 		if((pm5003_ret = pms5003_get_passive_measurement(&measurement, write_serial_pms5003, read_serial_pms5003))) {
 			display_error("PMS5003", pms5003_strerror(pm5003_ret));
 			continue;
@@ -231,7 +229,6 @@ int main(void) {
 			display_error("MH-Z19C", mh_z19c_strerror(mh_z19c_ret));
 			continue;
 		}
-
 
 		uint16_t value;
 		color_t background;
