@@ -106,8 +106,13 @@ void setup_pms5003(void) {
 
 	// RESET
 	gpio_set(PMS5003_PORT_RESET, PMS5003_GPIO_RESET);
+
 	// Required as PMS5003 takes a while to start accepting requests after reset
 	delay_ms(1500);
+
+	// Clear USART buffer
+	while((USART_SR(PMS5003_USART) & USART_SR_RXNE) != 0)
+		usart_recv(PMS5003_USART);
 
 	// Passive mode
 	if((pm5003_ret = pms5003_set_data_mode(PMS5003_DATA_MODE_PASSIVE, write_serial_pms5003, read_serial_pms5003))) {
